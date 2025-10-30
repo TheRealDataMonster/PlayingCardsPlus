@@ -403,11 +403,8 @@ class Game(BaseModel, ABC):
         return
 
     # functions hapepning beneathe - more functional than they are chronological
-    def _keep_score(self):
+    def __keep_score(self):
         pass
 
-    def _trigger_dealer(self):
-        pass
-
-    def _keep_score(self):
+    def __trigger_dealer(self):
         pass
