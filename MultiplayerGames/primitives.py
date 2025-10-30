@@ -395,6 +395,8 @@ class Game(BaseModel, ABC):
     def next_hand(self): #
         # Trigger player action
         for player in self.roster: #whatever is list equivalent version of it
+            action_instructions = player.take_action(crucial_game_state: Dict, historical_state: Iterable[Dict], cheat_codes: Optional[Any])
+            self.dealer._handle_player_actions(player=player, actions=action_instructions, deck=self.deck, rules=self.rules)
 
         # Dealer handles those
         # record data and then return
