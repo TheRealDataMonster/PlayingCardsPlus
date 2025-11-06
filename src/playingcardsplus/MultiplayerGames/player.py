@@ -1,62 +1,90 @@
 from playingcardsplus.card import Card, JokerCard
 
-from typing_extensions import Optional, DefaultDict, Dict, Iterable
-from pydantic import BaseModel, Field, PrivateAttr, NonNegativeInt
+from typing_extensions import Optional, DefaultDict, Dict, NamedTuple, List, Any
 from abc import ABC, abstractmethod
+from pydantic import BaseModel, Field
 
 
-class PlayerDecision_InstructionSet(BaseModel):
-    operations: DefaultDict
-    # (K,V) function = instruction op, decision function
+#TODO: so we need some sort of a validator to vlidate those two!
+class ScoreAndHandValidator(BaseModel):
+    """
+    Use this like this
+    1)
+    2)
+    3)
+    """
+    player_name: str = Field(frozen=True) #When validating, let's cross-ref this first
+    pass
 
-class Player(BaseModel, ABC):
+
+class PlayerBehavior(BaseModel):
+    name:str = Field(frozen=True)
+    soul: Optional[Any] = None
+
+
+class Instruction(NamedTuple):
+    op: str
+
+
+class PlayerDecision_InstructionSet(NamedTuple):
+    operations: Dict[Instruction, List[str]]
+    # (K,V) function = instruction op, [decision functions which is a function in player action]
+
+
+class Player:
     """
     Player object where name is immutable. Behavior - defined by AI can be modified each hand
     """
-    name: str = Field(frozen=True)
-    _hand: DefaultDict[Card|JokerCard, NonNegativeInt] = PrivateAttr(DefaultDict[Card|JokerCard, NonNegativeInt](int)) # How many of a given card does one have? - this way, we can track multi-decks and have it encodes
-    _score: int = 0
-    _behavior: Dict[str, str | int | float] = PrivateAttr() # this is where you can plug-in some behavior - like an AI model or rules-based object wrapper
+
+    def __init__(self, name: str, initial_hand: DefaultDict[Card | JokerCard, int], initial_score: int, starting_behvior: Dict[str, str | int | float]):
+        self.__name = name
+        self.__hand = initial_hand
+        self.__score = initial_score #TODO: score needs to be received from the Game - which may require some validation given it'll need ot xfer
+        self.__behavior = starting_behvior
+
     # Player behavior can be parametrized by location of the model, specific rules-based criteria per game, etc...
 
     # Accept a dealt card - must be called by a Dealer
     @property
-    def hand(self) -> DefaultDict[Card|JokerCard, NonNegativeInt]:
-        return self._hand
+    def hand(self) -> DefaultDict[Card | JokerCard, int]:
+        return self.__hand
 
     @property
     def score(self) -> int:
-        return self._score
+        return self.__score
 
-    @property #TODO: further access control? - only game devs and simulation runners need control
+    @property  # TODO: further access control? - only game devs and simulation runners need control
     def behavior(self) -> Dict[str, str | int | float]:
-        return self._behavior
+        return self.__behavior
 
-    @hand.setter
-    def _accept_card(self, cards: DefaultDict[Card|JokerCard, NonNegativeInt]):
+    def _accept_card(self, card: Card | JokerCard):
         """list of cards come ordered in a way it should be accepting them"""
-        for card, count in cards.items():
-            self._hand[card] += count
+        self.__hand[card] += 1
 
-    @score.setter
+    def _remove_card(self, card: Card | JokerCard):
+        self.__hand[card] -= 1
+
     def _update_score(self, new_points: int):
-        self._score += new_points
+        self.__score += new_points
 
     @behavior.setter
     def _update_behavior(self, new_behavior: Dict[str, str | int | float]):
         # exact logic for triggering this should be controlled by game devs
-        self._behavior = new_behavior
+        self.__behavior = new_behavior
 
     # TODO: Need to think about data structure that it grabs - specifically for cheat_codes
     # TODO: should this directly call AI agent or make a ping to the agent, which should be grabbing the data on its own and retrieve the decision?
-    @abstractmethod
-    def take_action(self, crucial_game_state: Dict, historical_state: Iterable[Dict], cheat_codes: Optional[str]) -> Iterable[PlayerDecision_InstructionSet]:
+    # @abstractmethod
+    def take_action(
+        self,
+        crucial_game_state: Dict,
+        historical_state: List[Dict],
+        cheat_codes: Optional[str],
+    ) -> List[Instruction]:
         """
-        Abstract method to be implemented by subclasses.
-
         Takes in crucial information about the game itself to make a judgment & past information to make msot judgments.
         It can take in information that woould be normally considered cheating if it knew (cheat_code) - ie. knowing placement of specific cards
 
         Returns a specific action that the Game/Dealer needs to look at and take action.
         """
-        ...
+        self.behavior.soul()

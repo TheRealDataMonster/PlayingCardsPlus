@@ -77,8 +77,6 @@ def test_french_multiplayer_creation_with_jokers():
         + Counter(deck.player_hands)
     )
 
-
-
 @pytest.mark.parametrize("func_name, args, expected_exception, expected_message", [
     ("_take_from_unused", [5], DealerUnassignedError, "Dealer has not been assigned to this Deck"),
     ("_replenish_unused", [[]], DealerUnassignedError, "Dealer has not been assigned to this Deck"),
@@ -110,7 +108,7 @@ def test_french_multiplayer_deck_manipulation_fails_dealer_unassigned(func_name,
 
 
 def test_french_multiplayer_dealer_assignment_toggle_fails():
-    """Toggling deale assignment is not allowed outside of Game object"""
+    """Toggling dealer assignment is not allowed outside of Game object"""
     deck = MultiPlayerDeck(name="French_Multi_Player_Deck_NoJoker", joker_count=0)
     # 1) Dealer unassigned
     assert deck.dealer_assigned == False

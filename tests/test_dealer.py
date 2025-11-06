@@ -1,15 +1,23 @@
+from playingcardsplus.MultiplayerGames.dealer import Dealer, DealerBehavior
+# from playingcardsplus.custom_error import DealerUnassignedError
+
+import pytest
 
 
-# class TestDealerCreation():
-#     def create_dealer(self):
-#         #assert Dealer creation states like well defined behavior
-#         pass
+def test_dealer_creation():
+    normal_behavior = DealerBehavior(name="Normal Fair", fair=True)
+    dealer = Dealer(name="Ordinary Dealer", initial_behavior=normal_behavior)
+    pass
+
+def test_dealer_run_without_game_assignment_fails():
+    pass
+
+def test_dealer_game_assignment_toggle_fails():
+    pass
 
 
-
-# class TestDealerActions(unittest.TestCase):
-#     # TODO: Deal value check
-#     # TODO: running with/without Game assignment
-#     # TODO: unassigning game assignment without proper validation
-#     # TODO: assigning game without proper validation
-#     pass
+def test_dealer_soul_actions():
+    """
+    Test to see if soul's conditions to change
+    """
+    pass

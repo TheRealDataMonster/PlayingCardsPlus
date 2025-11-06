@@ -2,7 +2,8 @@ from playingcardsplus.card import Rank, Suit, Card, JokerCard, Color
 
 from typing_extensions import List
 
-def create_french_cards(joker_count:int=0) -> List[Card|JokerCard]:
+
+def create_french_cards(joker_count: int = 0) -> List[Card | JokerCard]:
     cards = []
     for rank in Rank:
         for suit in Suit:
@@ -12,7 +13,7 @@ def create_french_cards(joker_count:int=0) -> List[Card|JokerCard]:
     while i <= joker_count:
         for color_member in Color:
             cards.append(JokerCard(color=color_member.value, number=i))
-            i+=1
+            i += 1
             if i > joker_count:
                 break
 

@@ -1,15 +1,15 @@
 """
 Defines appropriate objects and functions for a Regular Card Deck
 """
+
 from playingcardsplus.utils import create_french_cards
 from playingcardsplus.card import Card, JokerCard
 
 
-import random # Should be replaced for thread-safety and/or cryptogrraphic security of the random seed
+import random  # Should be replaced for thread-safety and/or cryptogrraphic security of the random seed
 from abc import ABC
 from typing_extensions import List
 from pydantic import BaseModel, computed_field, NonNegativeInt, ConfigDict
-
 
 
 class AbstractDeck(BaseModel, ABC):
@@ -19,18 +19,23 @@ class AbstractDeck(BaseModel, ABC):
     The `cards` attribute is a tuple, which is immutable.
     Methods that modify the deck return a new `Deck` instance.
     """
+
     model_config = ConfigDict(frozen=True)
     name: str
-    joker_count: NonNegativeInt
+    joker_count: NonNegativeInt # In multi-host/decentralized env, this needs to be sent from the Game
 
+    # Don't Actually need to store anythign because the actual interfaces used by Game Devs and Simulators shoulds use
+    # -> specific implentations that use the below functions and stores them appropriately
+    # ->
+    #
     @computed_field
     @property
-    def cards(self) -> List[Card|JokerCard]:
+    def cards(self) -> List[Card | JokerCard]:
         return create_french_cards(joker_count=self.joker_count)
 
     @computed_field
     @property
-    def shuffled_cards(self) -> List[Card|JokerCard]:
+    def shuffled_cards(self) -> List[Card | JokerCard]:
         """Returns a new Deck instance with the cards in a random order."""
         cards = self.cards
         random.shuffle(cards)

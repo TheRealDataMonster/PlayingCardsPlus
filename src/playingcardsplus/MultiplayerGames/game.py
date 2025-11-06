@@ -7,15 +7,32 @@ Each entity should be communicating via a specific data fields so they may be ho
 For being hosted on multiple envs, eventually need to support each entity communicating through various protocols like HTTPS, RPC, etc...
 """
 
-from playingcardsplus.card import Card, JokerCard
 from playingcardsplus.MultiplayerGames.deck import MultiPlayerDeck
 from playingcardsplus.MultiplayerGames.dealer import Dealer
 from playingcardsplus.MultiplayerGames.player import Player
 # from playingcardsplus.custom_error import DuplicateCardError, DeckInlclusionError, UnrecognizedCardError, DealerUnassignedError
 
-from typing_extensions import DefaultDict, Tuple, List, Iterable
+from typing_extensions import TypedDict, Dict, Tuple, List, Iterable
 from abc import ABC, abstractmethod
 from pydantic import BaseModel, Field
+
+
+# TODO:
+# cards at hand 0, i need to understand
+# 1) how many per player
+# 2) how many to board
+# 3) how many to trash
+#
+
+
+# Tules need to parametrize
+# 1) Board, Trash, Player hand out Config at 0
+# 2) Board, Trash, Player hand out Config at i
+# 3) player count and what not
+# 4)
+
+
+
 
 
 # TODO: let's make a separate DS for roster?
@@ -46,8 +63,6 @@ class TurnBasedCircularList:
 #     # 1) Why did a player take a certain action? (& what would've been optimal for their goal) -> refernce each index at a time
 #     # 2) When was it determined that a particular Player would win -> reference each index at a time then calculate odds based on deck status and what not
 
-
-
 class Game(BaseModel, ABC):
     """
     Game object is the primary interface for running games.
@@ -66,13 +81,28 @@ class Game(BaseModel, ABC):
 
     Implements private/protected function to be used by public functions
     """
+
     name: str = Field(frozen=True)
-    dealer: Dealer #should Dealer be swappable?
-    decks: List[MultiPlayerDeck] = Field(frozen=True) # there can be multiple decks & immutable
-    roster: Iterable[Player] #TODO: actually it needs to be circular so we can maintain order of playing
-    rules: DefaultDict[str, str]
-    scoreboard: DefaultDict[Player, int]  # Score should be kept by the Game. Trust this over
+    dealer: Dealer  # should Dealer be swappable?
+    decks: List[MultiPlayerDeck] = Field(frozen=True)  # there can be multiple decks & immutable
+    roster: Iterable[Player]  # TODO: actually it needs to be circular so we can maintain order of playing
+    rules: Dict[str, str]
+    scoreboard: Dict[Player, int]  # Score should be kept by the Game. Trust this over
     game_data_path: str
+
+
+    # *** Dealer & Game Assignments
+    def assign_dealer(self): #TODO: does this work?
+        for deck in self.decks:
+            deck._toggle_assignment()
+
+    def unassign_dealer(self): #TODO: this work?
+        for deck in self.decks:
+            deck._toggle_assignment()
+
+    def __toggle_game_assignment(self):
+        self.dealer._toggle_game_assignment()
+
     # 2) next round
     #   -> signal dealer to hand
     #   -> deck status update
@@ -88,62 +118,74 @@ class Game(BaseModel, ABC):
     #
 
     # to be called by simulators
-    def start_game(self): # return data to be stored for analyzing results later
+    def start_game(self):  # return data to be stored for analyzing results later
+        pass
         # Assign Game / Auth Dealer for the game
-        print(self.dealer.game_assigned)
-        self.dealer.__assign_game
-        print(self.dealer.game_assigned)
+        # if self.dealer.game_assigned is False:
+        #     self.__toggle_game_assignment()
 
-        # Send rules, deck to dealer & Deal first hand (_deal shoul do the status update for the deck)
-        hand_0, player_states_0 = self.dealer._deal(players=self.roster, rules=self.rules, deck=self.decks[0])
+        # # Send rules, deck to dealer & Deal first hand (_deal shoul do the status update for the deck)
+        # hand_0, player_states_0 = self.dealer.deal(
+        #     players=self.roster, rules=self.rules, deck=self.decks[0]
+        # )
 
-        # Data storage needs to reference each hand at a time.
-        data_0 = {
-            "action_score_hand": DefaultDict[str, Tuple[str, int, DefaultDict[Card|JokerCard, int](int)]](),
-            "deck": {
-                "unused": DefaultDict[Card|JokerCard, int](int), #TODO: turning this into a list only works for single deck
-                "board": DefaultDict[Card|JokerCard, int](int),
-                "trash_pile": DefaultDict[Card|JokerCard, int](int)
-            },
-            "player_behavior": {
-                #TODO: storing this?
-            },
-            "dealer_behavior": "" # TODO: how to store this?
-        }
+        # # Data storage needs to reference each hand at a time.
+        # data_0 = {
+        #     "action_score_hand": DefaultDict[
+        #         str, Tuple[str, int, DefaultDict[Card | JokerCard, int](int)]
+        #     ](),
+        #     "deck": {
+        #         "unused": DefaultDict[Card | JokerCard, int](
+        #             int
+        #         ),  # TODO: turning this into a list only works for single deck
+        #         "board": DefaultDict[Card | JokerCard, int](int),
+        #         "trash_pile": DefaultDict[Card | JokerCard, int](int),
+        #     },
+        #     "player_behavior": {
+        #         # TODO: storing this?
+        #     },
+        #     "dealer_behavior": "",  # TODO: how to store this?
+        # }
 
-        for player in self.roster: # TODO: once this becomes circular, it'll need a way to convert to a simple List
-            data_0["action_score_hand"][player.name] = {"", player.score, player.hand} # list only works for single deck -> should just become
+        # for player in self.roster:  # TODO: once this becomes circular, it'll need a way to convert to a simple List
+        #     data_0["action_score_hand"][player.name] = {
+        #         "",
+        #         player.score,
+        #         player.hand,
+        #     }  # list only works for single deck -> should just become
 
-        for deck in self.decks:
-            for card in deck.unused:
-                data_0["deck"]["unused"][card] += 1
-            for card, adder in deck.board.items():
-                data_0["deck"]["board"][card] += adder
-            for card in deck.trash_pile:
-                data_0["deck"]["trash_pile"][card] += 1
+        # for deck in self.decks:
+        #     for card in deck.unused:
+        #         data_0["deck"]["unused"][card] += 1
+        #     for card, adder in deck.board.items():
+        #         data_0["deck"]["board"][card] += adder
+        #     for card in deck.trash_pile:
+        #         data_0["deck"]["trash_pile"][card] += 1
 
         # data_0["player_behavior"] : {}
         # data_0["dealer_behavior"] = 0
 
-        #TODO: write to a JSON file/DB somewhere
+        # TODO: write to a JSON file/DB somewhere
 
-    def next_hand(self): #
-        # Trigger player action
-        for player in self.roster:
-            action_instructions = player.take_action
-        for player in self.roster: #whatever is list equivalent version of it
-            action_instructions = player.take_action(
-                crucial_game_state={},
-                historical_state={},
-                cheat_codes=None
-            ) #TODO: THINK ABOUT OPTIMAL IGNESTION PATH
-            self.dealer._handle_player_actions(player=player, actions=action_instructions, deck=self.deck, rules=self.rules)
+    # def next_hand(self):  #
+        # # Trigger player action
+        # for player in self.roster:
+        #     action_instructions = player.take_action
+        # for player in self.roster:  # whatever is list equivalent version of it
+        #     action_instructions = player.take_action(
+        #         crucial_game_state={}, historical_state={}, cheat_codes=None
+        #     )  # TODO: THINK ABOUT OPTIMAL IGNESTION PATH
+        #     self.dealer._handle_player_actions(
+        #         player=player,
+        #         actions=action_instructions,
+        #         deck=self.deck,
+        #         rules=self.rules,
+        #     )
 
-        # Dealer handles those
-        # record data and then return
-        return
+        # # Dealer handles those
+        # # record data and then return
+        # return
 
     # functions hapepning beneathe - more functional than they are chronological
-    @abstractmethod
-    def __keep_score(self):
-        ...
+    # @abstractmethod
+    # def __keep_score(self): ...

@@ -7,7 +7,7 @@ from playingcardsplus.custom_error import GameUnassignedError
 from playingcardsplus.MultiplayerGames.player import PlayerDecision_InstructionSet, Player
 from playingcardsplus.MultiplayerGames.dealer import DealerBehavior, Dealer
 from playingcardsplus.MultiplayerGames.deck import MultiPlayerDeck
-from playingcardsplus.MultiplayerGames.game import Game
+from playingcardsplus.MultiplayerGames.game import Game, Rules
 
 from typing_extensions import Dict, Iterable, Optional, Tuple
 
@@ -18,20 +18,56 @@ from typing_extensions import Dict, Iterable, Optional, Tuple
 # 3) Create Rules
 # 4) Define scoring logic
 
-ops = PlayerDecision_InstructionSet(
-    operations={
-        "claim": ?, # claim means I will now reveal one of my cards,
-        "load": ?, # take a card from the unused,
-        "throw": ? # throw a card or two away to those who have
-    }
+# ops = PlayerDecision_InstructionSet(
+#     operations={
+#         "claim": ?, # claim means I will now reveal one of my cards,
+#         "load": ?, # take a card from the unused,
+#         "throw": ? # throw a card or two away to those who have
+#     }
+# )
+# Specific To Dynamite
+# 1) claim conditions
+# 2) throw conditions - which cards to whom, how many ,etcc..
+# Some of this could just be in the take action function tbh as one of the constraints
+
+dynamite_rules = Rules(
+    deck_size=52,
+    player_range=(2,5),
+    cards_per_player_hand_0={
+        2: 12,
+        3: 8,
+        4: 7,
+        5: 7
+    },
+    cards_per_player_hand_i=1,
+    other_card_distribution_hand_0={
+        "board":,
+        "trash_pile":
+    },
+    instructions=,
+    instruction_constraints=
 )
 
+
 rules = {
-    # TODO: needto contain info like
-    # 1) max cards for player count
-    # 2) claim conditions
-    # 3) throw conditions - which cards to whom, how many ,etcc..
-    # Some of this could just be in the take action function tbh as one of the constraints
+    # Essential Info for all games
+    # 1) player range - tuple
+    # 2) cards dealt per player at Hand 0 - if dict then number is arange for each of player count other wise it's an int
+    # 3) cards dealt per player at Hand i, i>0
+    # 4) each operation mapped into functions -= IsntructionSet
+    # 5) conditions where each operation is viable
+
+
+    "player_range": (2, 5),
+    "cards_per_player_hand_0": {
+        2: 12,
+        3: 8,
+        4: 7,
+        5: 7
+    },
+    "cards_per_player_hand_i": 1,
+
+
 }
 class DynamitePlayer(Player):
     def take_action(self, crucial_game_state: Dict, historical_state: Iterable[Dict], cheat_codes: Optional[str | int | float]) -> Iterable[PlayerDecision_InstructionSet]:
