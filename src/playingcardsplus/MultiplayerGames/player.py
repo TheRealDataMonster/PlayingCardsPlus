@@ -6,6 +6,18 @@ from pydantic import BaseModel, Field
 
 
 #TODO: so we need some sort of a validator to vlidate those two!
+# TODO: 2 things that need to be received from other entities - potentially diff env in multi-host/decentrlzed env are
+# 1) score
+# 2) player hand updates
+#
+# 1 thing that need to be sent are
+# 1) player hand update
+#
+# That means we must valdiate ->
+# 1) Score update - in relation th new score that comes in vs current score & play's previous moves - depending on eng could be that I re-run the logic or verify the proof here
+#  > thing is I need ot valdiate the formatting of the result here and see if it matches with trace inb the proof verification stage?
+# 2) hand update: player received new hands - need to valdiate against its current udnerstanding of the deck and corr-ref againt proof of deck update
+
 class ScoreAndHandValidator(BaseModel):
     """
     Use this like this
@@ -27,7 +39,7 @@ class Instruction(NamedTuple):
 
 
 class PlayerDecision_InstructionSet(NamedTuple):
-    operations: Dict[Instruction, List[str]]
+    operations: List[Instruction]
     # (K,V) function = instruction op, [decision functions which is a function in player action]
 
 
@@ -87,4 +99,4 @@ class Player:
 
         Returns a specific action that the Game/Dealer needs to look at and take action.
         """
-        self.behavior.soul()
+        return self.behavior.soul(crucial_game_state, historical_state, cheat_codes)

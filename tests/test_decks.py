@@ -44,6 +44,8 @@ def test_french_multiplayer_creation():
         + Counter(deck.player_hands)
     )
 
+    #TODO: add some that fails
+
 
 def test_french_multiplayer_creation_with_jokers():
     """

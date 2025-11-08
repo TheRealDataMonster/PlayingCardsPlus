@@ -12,9 +12,9 @@ from playingcardsplus.MultiplayerGames.dealer import Dealer
 from playingcardsplus.MultiplayerGames.player import Player
 # from playingcardsplus.custom_error import DuplicateCardError, DeckInlclusionError, UnrecognizedCardError, DealerUnassignedError
 
-from typing_extensions import TypedDict, Dict, Tuple, List, Iterable
+from typing_extensions import TypedDict, Dict, Tuple, List
 from abc import ABC, abstractmethod
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 # TODO:
@@ -81,11 +81,12 @@ class Game(BaseModel, ABC):
 
     Implements private/protected function to be used by public functions
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: str = Field(frozen=True)
     dealer: Dealer  # should Dealer be swappable?
     decks: List[MultiPlayerDeck] = Field(frozen=True)  # there can be multiple decks & immutable
-    roster: Iterable[Player]  # TODO: actually it needs to be circular so we can maintain order of playing
+    roster: List[Player]  # TODO: make it circular so we can maintain order of playing?
     rules: Dict[str, str]
     scoreboard: Dict[Player, int]  # Score should be kept by the Game. Trust this over
     game_data_path: str
@@ -94,11 +95,11 @@ class Game(BaseModel, ABC):
     # *** Dealer & Game Assignments
     def assign_dealer(self): #TODO: does this work?
         for deck in self.decks:
-            deck._toggle_assignment()
+            deck._toggle_dealer_assignment()
 
     def unassign_dealer(self): #TODO: this work?
         for deck in self.decks:
-            deck._toggle_assignment()
+            deck._toggle_dealer_assignment()
 
     def __toggle_game_assignment(self):
         self.dealer._toggle_game_assignment()

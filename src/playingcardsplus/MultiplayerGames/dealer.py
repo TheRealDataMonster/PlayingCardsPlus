@@ -1,11 +1,12 @@
-from playingcardsplus.MultiplayerGames.deck import MultiPlayerDeck
+from playingcardsplus.MultiplayerGames.deck import MultiPlayerDeck, Distributee
 from playingcardsplus.MultiplayerGames.player import (
     Player,
     PlayerDecision_InstructionSet,
     Instruction
 )
-from playingcardsplus.MultiplayerGames.rules import Rules, BoardTrashUnusedConfig
-from playingcardsplus.custom_error import RuleViolationError, RuleIllFormedError, DealerError, DealerUnassignedError
+from playingcardsplus.MultiplayerGames.rules import Rules
+
+from playingcardsplus.custom_error import RuleViolationError, RuleIllFormedError, DealerError, GameUnassignedError
 from playingcardsplus.card import Card, JokerCard
 from playingcardsplus.dealer import CardDistributionMethod
 
@@ -13,7 +14,7 @@ from typing_extensions import Optional, List, Dict, Iterable, Tuple, Deque
 from abc import ABC, abstractmethod
 # from dataclasses import dataclass
 # from typing_extensions import ClassVar
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, NonNegativeInt
 
 
 # TODO: In multi-host env this maybe necessary? Otherwise, the env that hosts the Dealer should control this and prove this
@@ -37,6 +38,7 @@ class DealerBehavior(BaseModel):
 
     For example, Normal Fair Dealer actually should not contain anything other than the name and fair = True
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: str = Field(frozen=True)
     fair: bool = True  # If not fair then it also can look up card ordering
@@ -69,8 +71,6 @@ class AbstractDealer(ABC):
     When players communicate their action - in instruction sets, Dealers actually execute. When they execute, they're reading getters and setters in MultiPlayerDeck
     """
 
-    # TODO: need a way to track and verify here that a Dealer is indeed dealing for a specific game
-    # TODO: And that it has indeed received status about the Game from the Game object
     def __init__(self, name: str, initial_behavior: DealerBehavior):
         self.__name = name
         self.__behavior = initial_behavior # It's bad practice to change this - should be changed as a result of Soul updating itself
@@ -90,11 +90,18 @@ class AbstractDealer(ABC):
 
     def _toggle_game_assignment(self):
         self.__game_assigned = not self.__game_assigned
+
+
+    # TODO: ok maybe reconsider this later - for better
+    # @classmethod
+    # def toggle_game_assignment(cls, dealer: 'Dealer', game: Game):
+    #     if dealer == game.dealer:
+    #         dealer._toggle_game_assignment()
+    #
+
     # def update_behavior(self, new_behavior: DealerBehavior): # might lead to bad practices... Most changes should be programmed to the Soul
     #     self._behavior = new_behavior
 
-
-    # TODO: making sure these are only callable by the Game Object
     @abstractmethod
     def deal(self, players: List[Player], rules: Rules, deck: MultiPlayerDeck, turn: int) -> Tuple[MultiPlayerDeck, Iterable[Player]]:
         """
@@ -138,7 +145,7 @@ class Dealer(AbstractDealer):
     @classmethod
     def discover_dealing_parameters(
         cls, players: List[Player], rules: Rules, turn: int
-    ) -> Tuple[int, int, BoardTrashUnusedConfig]:
+    ) -> Tuple[int, int, Dict[Distributee, NonNegativeInt]]:
 
         player_count = len(players)
         # Figure out how many to distribute to each player
@@ -222,20 +229,25 @@ class Dealer(AbstractDealer):
         return cards_distributed
 
 
-    #TODO: for now behavior is moot
+    #TODO: For now behavior is moot
     def deal(self,
         players: List[Player],
         rules: Rules,
         deck: MultiPlayerDeck,
         turn: int
     ) -> Tuple[MultiPlayerDeck, Iterable[Player]]:
+        if not self.game_assigned:
+            raise GameUnassignedError
+
         if not deck.dealer_assigned: #It's meant to be set by Game
-            raise DealerUnassignedError
+            deck._toggle_dealer_assignment()
 
         # Discover some dealing parameters - really just a wrapper...
         player_count, player_distribution_count, other_distribution_map = Dealer.discover_dealing_parameters(
             players=players, rules=rules, turn=turn
         )
+
+        #TODO: this currently doesn't take care of running outta cards
 
         # Distribute cards in a order that's provided - this may change depending on circumstances
         for distributee in rules.distribution_ordering:
@@ -244,12 +256,12 @@ class Dealer(AbstractDealer):
             try:
                 total_cards_to_distribute = other_distribution_map[distributee]
             except KeyError:
-                if distributee == "player":
+                if distributee.value == "player":
                     continue
                 else:
                     raise RuleIllFormedError("'{}' Is not recognized as entity cards are meant to be distributed to".format(distributee))
 
-            if distributee == "player":
+            if distributee.value == "player":
                 # We stored the card to be a Deque so it has to be a operation wher ewe grab each card at a time
                 total_cards_to_distribute = player_distribution_count*player_count # override the above
 
@@ -266,7 +278,7 @@ class Dealer(AbstractDealer):
                     cards_distributed = cards_distributed
                 )
 
-            elif (distributee == "board") or (distributee == "trash_pile") or (distributee == "unused"):
+            elif (distributee.value == "board") or (distributee.value == "trash_pile") or (distributee.value == "unused"):
                 cards_distributed = Dealer.distribute_cards_to_others(
                     distribution_method=distribution_method,
                     deck=deck,
@@ -292,9 +304,16 @@ class Dealer(AbstractDealer):
         deck: MultiPlayerDeck,
         rules: Dict[str, str | int | float]
     ):
+        if not self.game_assigned:
+            raise GameUnassignedError
 
         # TODO: where do I bring in the
         for instruction in instructions:
             for action_str in instruction_set.operations[instruction]:
                 if hasattr(player, action_str) and callable(getattr(player, action_str)):
                     res = getattr(player, action_str)(deck)
+
+    def test_action(self):
+        if not self.game_assigned:
+            raise GameUnassignedError
+        return

@@ -7,8 +7,16 @@ from playingcardsplus.custom_error import (
     DealerUnassignedError
 )
 
+from enum import Enum
 from typing_extensions import List, OrderedDict, Deque, Iterable, Self
 from pydantic import PrivateAttr, NonNegativeInt, model_validator
+
+
+class Distributee(str, Enum):
+    PLAYER="player"
+    BOARD="board"
+    TRASH_PILE="trash_pile"
+    UNUSED="unused"
 
 
 class MultiPlayerDeck(AbstractDeck):
@@ -52,8 +60,9 @@ class MultiPlayerDeck(AbstractDeck):
     def dealer_assigned(self) -> bool:
         return self.__dealer_assigned
 
-    def _toggle_assignment(self):
+    def _toggle_dealer_assignment(self):
         self.__dealer_assigned = not self.__dealer_assigned
+
 
     # *** Below functions are meant to be used by the Dealer to manipulate the deck as needed
     def _take_from_unused(self, used_count: NonNegativeInt) -> Deque[Card | JokerCard]:  # When updating the Deck, this is the first or second thing that needs to occur
