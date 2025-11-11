@@ -187,6 +187,8 @@ class Game(BaseModel, ABC):
         # # record data and then return
         # return
 
+    #TODO: I think it's a logiscital decision whether to turn this into an abstract class and leave it so
+    # or simplt make iy classmethod and go from there....
     # functions hapepning beneathe - more functional than they are chronological
     # @abstractmethod
     # def __keep_score(self): ...

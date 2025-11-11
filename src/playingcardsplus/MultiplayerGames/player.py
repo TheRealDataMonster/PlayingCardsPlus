@@ -43,6 +43,7 @@ class PlayerDecision_InstructionSet(NamedTuple):
     # (K,V) function = instruction op, [decision functions which is a function in player action]
 
 
+#TODO: it remaisn a choice whether to input a soul of a player of specific game or simply to input soul and separate types of players per game as a difff object...
 class Player:
     """
     Player object where name is immutable. Behavior - defined by AI can be modified each hand

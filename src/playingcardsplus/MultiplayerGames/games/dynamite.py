@@ -4,10 +4,11 @@ Basically you accumulate all 4 cards of the same deck and then it becomes a dyna
 Once you accumulate all 4 cards you throw away those 4 and then give one of your cards to a player of your choosing
 """
 from playingcardsplus.custom_error import GameUnassignedError
-from playingcardsplus.MultiplayerGames.player import PlayerDecision_InstructionSet, Player
+from playingcardsplus.MultiplayerGames.player import PlayerDecision_InstructionSet, Player, Instruction
 from playingcardsplus.MultiplayerGames.dealer import DealerBehavior, Dealer
 from playingcardsplus.MultiplayerGames.deck import MultiPlayerDeck
-from playingcardsplus.MultiplayerGames.game import Game, Rules
+from playingcardsplus.MultiplayerGames.rules import Rules
+from playingcardsplus.MultiplayerGames.game import Game
 
 from typing_extensions import Dict, Iterable, Optional, Tuple
 
@@ -40,12 +41,18 @@ dynamite_rules = Rules(
         5: 7
     },
     cards_per_player_hand_i=1,
-    other_card_distribution_hand_0={
-        "board":,
-        "trash_pile":
-    },
-    instructions=,
-    instruction_constraints=
+    other_card_distribution_hand_0=__correct_other_card_distribution_0,
+    other_card_distribution_hand_i=__correct_other_card_distribution_i,
+    distribution_methods=__correct_distribution_method,
+    distribution_ordering=__correct_distribution_ordering,
+    instructions=PlayerDecision_InstructionSet(
+        operations = [
+            Instruction(op="foo"),
+            Instruction(op="bar")
+        ]
+    ),
+    instruction_constraints={
+    }
 )
 
 
@@ -69,30 +76,14 @@ rules = {
 
 
 }
+
+#TODO: remains a choice whether this is wrapper or inheritance...
 class DynamitePlayer(Player):
     def take_action(self, crucial_game_state: Dict, historical_state: Iterable[Dict], cheat_codes: Optional[str | int | float]) -> Iterable[PlayerDecision_InstructionSet]:
         """
         """
         # this will involve some sort of a model making a decision and that decision space will be the space of instruction set
         return
-
-class DynamiteDealer(Dealer):
-    def _deal(self, players: Iterable[Player], rules: Dict[str, str | int | float], deck: MultiPlayerDeck) -> Tuple[MultiPlayerDeck, Iterable[Player]]:
-        if self._game_assigned is False: #TODO: eventually should be some kinda auth
-            raise GameUnassignedError
-        for player in players:
-
-            card_count = ?# TODO: rules would be figuring out how to deal cards here
-            player._hand[] # add to player hand
-            deck._take_from_unused(used_count)
-            deck.__give_to_players(?)
-
-        # TODO: have to make changes to the deck accordingly here
-
-        pass
-
-    def _handle_player_actions(self, player: Player, actions: Iterable[PlayerDecision_InstructionSet], deck: MultiPlayerDeck, rules: Dict[str, Any]):
-        pass #TODO:
 
 
 class Dynamite(Game):

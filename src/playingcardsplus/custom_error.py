@@ -33,6 +33,10 @@ class UnrecognizedCardError(Exception):
         self.message = message
         super().__init__(self.message)
 
+class UnrecognizedDistributeeError(Exception):
+    def __init__(self, message: str = "Unknown Distributee for cards!"):
+        self.message = message
+        super().__init__(self.message)
 
 class DealerUnassignedError(Exception):
     """Dealer not assigned to the Deck"""
@@ -60,11 +64,25 @@ class RuleViolationError(Exception):
         super().__init__(self.message)
 
 class RuleIllFormedError(Exception):
-    def __init__(self, message: str = "Particular object i nthe Rule is IllFormed!"):
+    def __init__(self, message: str = "Particular object in the Rule is IllFormed!"):
         self.message = message
         super().__init__(self.message)
 
 class DealerError(Exception):
     def __init__(self, message: str = "Ooops! Something werid happened while dealing"):
+        self.message = message
+        super().__init__(self.message)
+
+
+
+
+# Specify types of RuleIllFormedError
+class PlayerRangeError(RuleIllFormedError):
+    def __init__(self, message: str = "Player Range Is Messed Up!"):
+        self.message = message
+        super().__init__(self.message)
+
+class CardDistributionError(RuleIllFormedError):
+    def __init__(self, message: str = "Likely Too many Cards Being Distributed"):
         self.message = message
         super().__init__(self.message)
