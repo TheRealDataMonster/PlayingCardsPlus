@@ -31,51 +31,6 @@ from typing_extensions import Dict, Iterable, Optional, Tuple
 # 2) throw conditions - which cards to whom, how many ,etcc..
 # Some of this could just be in the take action function tbh as one of the constraints
 
-dynamite_rules = Rules(
-    deck_size=52,
-    player_range=(2,5),
-    cards_per_player_hand_0={
-        2: 12,
-        3: 8,
-        4: 7,
-        5: 7
-    },
-    cards_per_player_hand_i=1,
-    other_card_distribution_hand_0=__correct_other_card_distribution_0,
-    other_card_distribution_hand_i=__correct_other_card_distribution_i,
-    distribution_methods=__correct_distribution_method,
-    distribution_ordering=__correct_distribution_ordering,
-    instructions=PlayerDecision_InstructionSet(
-        operations = [
-            Instruction(op="foo"),
-            Instruction(op="bar")
-        ]
-    ),
-    instruction_constraints={
-    }
-)
-
-
-rules = {
-    # Essential Info for all games
-    # 1) player range - tuple
-    # 2) cards dealt per player at Hand 0 - if dict then number is arange for each of player count other wise it's an int
-    # 3) cards dealt per player at Hand i, i>0
-    # 4) each operation mapped into functions -= IsntructionSet
-    # 5) conditions where each operation is viable
-
-
-    "player_range": (2, 5),
-    "cards_per_player_hand_0": {
-        2: 12,
-        3: 8,
-        4: 7,
-        5: 7
-    },
-    "cards_per_player_hand_i": 1,
-
-
-}
 
 #TODO: remains a choice whether this is wrapper or inheritance...
 class DynamitePlayer(Player):

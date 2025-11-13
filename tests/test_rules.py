@@ -56,7 +56,7 @@ def test_rules_creation():
         deck_size=52,
         player_range=(2,5),
 
-        allow_trash_pile_addition=False,
+
         cards_per_player_hand_0={
             2: 12,
             3: 8,
@@ -66,6 +66,8 @@ def test_rules_creation():
         cards_per_player_hand_i=1,
         board_distribution_hand_0=2,
         board_distribution_hand_i=3,
+        trash_pile_distribution_hand_0=0,
+        trash_pile_distribution_hand_i=0,
         distribution_methods=__correct_distribution_method,
         distribution_ordering=__correct_distribution_ordering,
         instructions=PlayerDecision_InstructionSet(
@@ -145,7 +147,79 @@ def test_rules_creation():
                 "instruction_constraints":{}
             }, pytest.raises(CardDistributionError)
         ),
-
+        # Too many to trash_pile at hand_0
+        (
+            {
+                "deck_size":52,
+                "player_range":(2,5),
+                "allow_trash_pile_addition": False,
+                "cards_per_player_hand_0":{
+                    2: 5, # Too many Cards!!!!
+                    3: 5,
+                    4: 7,
+                    5: 7,
+                },
+                "cards_per_player_hand_i":1,
+                "board_distribution_hand_0":2,
+                "board_distribution_hand_i":3,
+                "trash_pile_distribution_hand_0":44,
+                "trash_pile_distribution_hand_i":2,
+                "distribution_methods":__correct_distribution_method,
+                "distribution_ordering":__correct_distribution_ordering,
+                "instructions": PlayerDecision_InstructionSet(operations=[Instruction(op="foo"),Instruction(op="bar")]),
+                "instruction_constraints":{}
+            }, pytest.raises(CardDistributionError)
+        ),
+        # Too many to trash_pile
+        (
+            {
+                "deck_size":52,
+                "player_range":(2,5),
+                "allow_trash_pile_addition": False,
+                "cards_per_player_hand_0":{
+                    2: 5, # Too many Cards!!!!
+                    3: 5,
+                    4: 7,
+                    5: 7,
+                },
+                "cards_per_player_hand_i":1,
+                "board_distribution_hand_0":2,
+                "board_distribution_hand_i":3,
+                "trash_pile_distribution_hand_0":4,
+                "trash_pile_distribution_hand_i":4,
+                "distribution_methods":__correct_distribution_method,
+                "distribution_ordering":__correct_distribution_ordering,
+                "instructions": PlayerDecision_InstructionSet(operations=[Instruction(op="foo"),Instruction(op="bar")]),
+                "instruction_constraints":{}
+            }, pytest.raises(CardDistributionError)
+        ),
+        # trash_pile is last so it's ok even if there's an overflow.
+        (
+            {
+                "deck_size":52,
+                "player_range":(2,5),
+                "allow_trash_pile_addition": False,
+                "cards_per_player_hand_0":{
+                    2: 5, # Too many Cards!!!!
+                    3: 5,
+                    4: 7,
+                    5: 7,
+                },
+                "cards_per_player_hand_i":1,
+                "board_distribution_hand_0":2,
+                "board_distribution_hand_i":3,
+                "trash_pile_distribution_hand_0":4,
+                "trash_pile_distribution_hand_i":4,
+                "distribution_methods":__correct_distribution_method,
+                "distribution_ordering":[
+                    Distributee.PLAYER, Distributee.BOARD, Distributee.UNUSED, Distributee.TRASH_PILE,
+                ],
+                "instructions": PlayerDecision_InstructionSet(operations=[Instruction(op="foo"),Instruction(op="bar")]),
+                "instruction_constraints":{}
+            }, does_not_raise()
+            # Math here is 52 - 35 - 2 - 4 = 11 > 5 + 3 + 3
+            #
+        ),
         (
             {
                 "deck_size":52,

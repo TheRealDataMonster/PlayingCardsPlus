@@ -14,27 +14,12 @@ from playingcardsplus.MultiplayerGames.player import Player
 
 from typing_extensions import TypedDict, Dict, Tuple, List
 from abc import ABC, abstractmethod
+from sqlalchemy import True_
 from pydantic import BaseModel, Field, ConfigDict
 
 
-# TODO:
-# cards at hand 0, i need to understand
-# 1) how many per player
-# 2) how many to board
-# 3) how many to trash
-#
 
-
-# Tules need to parametrize
-# 1) Board, Trash, Player hand out Config at 0
-# 2) Board, Trash, Player hand out Config at i
-# 3) player count and what not
-# 4)
-
-
-
-
-
+# On hold as it's not certain if it's necessary. Might be if it starts becoming used for actual game development and security and exactness is a concern
 # TODO: let's make a separate DS for roster?
 #   -> circular & ordered - so you can quick rotating whose turn it is
 #   -> has max & min capacity - determined by Game rule...
@@ -73,7 +58,7 @@ class Game(BaseModel, ABC):
 
     Game object is the interface that simulators will be interfacing with. They will call public Object functions that are intuitive - start_game, next_hand, etc...
 
-    Game devs will be writing the code for this per Game. It takes 4 tasks to accomplish this
+    Game devs will be writing code for this per Game. It takes 4 tasks to accomplish this
     -> Create rules
     -> Design instruction set
     -> Define player action types
@@ -87,9 +72,9 @@ class Game(BaseModel, ABC):
     dealer: Dealer  # should Dealer be swappable?
     decks: List[MultiPlayerDeck] = Field(frozen=True)  # there can be multiple decks & immutable
     roster: List[Player]  # TODO: make it circular so we can maintain order of playing?
-    rules: Dict[str, str]
-    scoreboard: Dict[Player, int]  # Score should be kept by the Game. Trust this over
-    game_data_path: str
+    rules: Dict[str, str] = Field(frozen=True)
+    scoreboard: Dict[Player, int]  # Score should be kept by the Game. Trust this over what players keep track of - they're motivated by their behavior profiles in simulations and in real games, they may be conflated
+    game_data_path: str # where to store data about the game - up to devs to decide how to manage this
 
 
     # *** Dealer & Game Assignments
@@ -188,7 +173,7 @@ class Game(BaseModel, ABC):
         # return
 
     #TODO: I think it's a logiscital decision whether to turn this into an abstract class and leave it so
-    # or simplt make iy classmethod and go from there....
+    # or simplt make iy classmethod and go fro mthere
     # functions hapepning beneathe - more functional than they are chronological
     # @abstractmethod
     # def __keep_score(self): ...
