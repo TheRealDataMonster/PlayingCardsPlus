@@ -86,3 +86,9 @@ class CardDistributionError(RuleIllFormedError):
     def __init__(self, message: str = "Likely Too many Cards Being Distributed"):
         self.message = message
         super().__init__(self.message)
+
+
+# class TestError(Exception):
+#     def __init__(self, message = "just a test"):
+#         self.message = message
+#         super().__init__(self.message)

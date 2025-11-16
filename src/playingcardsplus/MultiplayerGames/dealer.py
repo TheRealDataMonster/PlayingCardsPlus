@@ -141,7 +141,7 @@ class Dealer(AbstractDealer):
                 abs(leftovers),
                 "leftovers" if leftovers > 0 else "cards that weren't supposed to be distributed",
             ))
-
+    # TODO: rules have changes - let's change this implementation
     @classmethod
     def discover_dealing_parameters(
         cls, players: List[Player], rules: Rules, turn: int
@@ -149,10 +149,10 @@ class Dealer(AbstractDealer):
 
         player_count = len(players)
         # Figure out how many to distribute to each player
-        distribution_count_map = rules.cards_per_player_hand_0 if turn == 0 else rules.cards_per_player_hand_i
-        if type(distribution_count_map) is int:
+        distribution_count_map = rules.cards_per_player_early_hands if turn == 0 else rules.cards_per_player_hand_i
+        if isinstance(distribution_count_map, int):
             player_distribution_count = distribution_count_map
-        elif type(distribution_count_map) is Dict:
+        elif isinstance(distribution_count_map, dict):
             try:
                 player_distribution_count = distribution_count_map[player_count]
             except KeyError:
@@ -230,6 +230,7 @@ class Dealer(AbstractDealer):
 
 
     #TODO: For now behavior is moot
+    # TODO: implementation for this needs to change as it has dependecy on Rules
     def deal(self,
         players: List[Player],
         rules: Rules,
