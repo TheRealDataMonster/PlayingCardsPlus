@@ -3,14 +3,15 @@ Dynamite is a game I made.
 Basically you accumulate all 4 cards of the same deck and then it becomes a dynamite you can give to someone.
 Once you accumulate all 4 cards you throw away those 4 and then give one of your cards to a player of your choosing
 """
-from playingcardsplus.custom_error import GameUnassignedError
-from playingcardsplus.MultiplayerGames.player import PlayerDecision_InstructionSet, Player, Instruction
-from playingcardsplus.MultiplayerGames.dealer import DealerBehavior, Dealer
-from playingcardsplus.MultiplayerGames.deck import MultiPlayerDeck
+from playingcardsplus.MultiplayerGames.data import CollectibleData
+from playingcardsplus.MultiplayerGames.instructions import Instruction, InstructionSet
+from playingcardsplus.MultiplayerGames.player import Player
+from playingcardsplus.MultiplayerGames.deck import Distributee
 from playingcardsplus.MultiplayerGames.rules import Rules
 from playingcardsplus.MultiplayerGames.game import Game
+from playingcardsplus.dealer import CardDistributionMethod
 
-from typing_extensions import Dict, Iterable, Optional, Tuple
+from typing_extensions import List, Optional
 
 
 #TODO:
@@ -19,26 +20,56 @@ from typing_extensions import Dict, Iterable, Optional, Tuple
 # 3) Create Rules
 # 4) Define scoring logic
 
-# ops = PlayerDecision_InstructionSet(
-#     operations={
-#         "claim": ?, # claim means I will now reveal one of my cards,
-#         "load": ?, # take a card from the unused,
-#         "throw": ? # throw a card or two away to those who have
-#     }
-# )
+__DynamitePlayerOperations = InstructionSet(
+    instructions={
+        Instruction(operation="claim"),
+        Instruction(operation="throw"),
+        Instruction(operation="draw"),
+    }
+)
 # Specific To Dynamite
 # 1) claim conditions
 # 2) throw conditions - which cards to whom, how many ,etcc..
 # Some of this could just be in the take action function tbh as one of the constraints
 
+__DynamiteRules = Rules(
+    deck_size=52,
+    player_range=(2,5),
+    cards_per_player_early_hands=[7],
+    cards_per_player_hand_i=0, # players have an option to draw from unused but are not necessarily given one
+    board_distribution_early_hands=[0],
+    board_distribution_hand_i=0,
+    trash_pile_distribution_early_hands=[0], # trash_pile is created as a result of player action but not required by the game
+    trash_pile_distribution_hand_i=0,
+    distribution_methods={
+        Distributee.PLAYER: CardDistributionMethod.LUMP,
+        Distributee.TRASH_PILE: CardDistributionMethod.LUMP,
+        Distributee.BOARD: CardDistributionMethod.LUMP,
+        Distributee.UNUSED: CardDistributionMethod.LUMP,
+    },
+    distribution_ordering=[
+        Distributee.PLAYER, Distributee.BOARD, Distributee.TRASH_PILE, Distributee.UNUSED
+    ],
 
-#TODO: remains a choice whether this is wrapper or inheritance...
+    instructions=__DynamitePlayerOperations,
+    instruction_constraints={} # TODO gotta define this better here
+
+)
+
+
 class DynamitePlayer(Player):
-    def take_action(self, crucial_game_state: Dict, historical_state: Iterable[Dict], cheat_codes: Optional[str | int | float]) -> Iterable[PlayerDecision_InstructionSet]:
+    """
+    This wrapper/child class implements variety of functions that are used such that they change player hands information
+    """
+
+    def take_action(
+        self,
+        current_game_state: CollectibleMetaData,
+        historical_states: List[CollectibleData],
+        cheating_states: Optional[List['Player']]
+    ) -> List[Instruction]:
         """
         """
-        # this will involve some sort of a model making a decision and that decision space will be the space of instruction set
-        return
 
 
 class Dynamite(Game):

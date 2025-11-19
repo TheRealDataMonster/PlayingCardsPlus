@@ -9,7 +9,17 @@ from playingcardsplus.card import Card, JokerCard
 import random  # Should be replaced for thread-safety and/or cryptogrraphic security of the random seed
 from abc import ABC
 from typing_extensions import List
+from enum import Enum
 from pydantic import BaseModel, computed_field, NonNegativeInt, ConfigDict
+
+
+class DeckType(str, Enum):
+    FRENCH="french"
+    # GERMAN="german"
+
+CardCountMap = {
+    DeckType.FRENCH: 52
+}
 
 
 class AbstractDeck(BaseModel, ABC):
@@ -22,6 +32,7 @@ class AbstractDeck(BaseModel, ABC):
 
     model_config = ConfigDict(frozen=True)
     name: str
+    type: DeckType = DeckType.FRENCH
     joker_count: NonNegativeInt # In multi-host/decentralized env, this needs to be sent from the Game
 
     # Don't Actually need to store anythign because the actual interfaces used by Game Devs and Simulators shoulds use
@@ -42,7 +53,12 @@ class AbstractDeck(BaseModel, ABC):
         return cards
 
     def __len__(self) -> int:
-        return len(self.cards)
+        count = 52
+        if self.type==DeckType.FRENCH:
+            count = 52
+        return count + self.joker_count
+
+        #TODO or dimply just
 
 
 # class SinglePlayerDeck(AbstractDeck):

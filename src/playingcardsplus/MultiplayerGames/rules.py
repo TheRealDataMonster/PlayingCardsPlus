@@ -15,7 +15,7 @@ Please be mindful that you can create a Rules object that does not throw Error d
 to have for any Game.
 """
 
-from playingcardsplus.MultiplayerGames.player import PlayerDecision_InstructionSet
+from playingcardsplus.MultiplayerGames.instructions import InstructionSet
 from playingcardsplus.MultiplayerGames.deck import Distributee
 from playingcardsplus.dealer import CardDistributionMethod
 from playingcardsplus.custom_error import RuleIllFormedError, PlayerRangeError, CardDistributionError
@@ -23,8 +23,8 @@ from playingcardsplus.custom_error import RuleIllFormedError, PlayerRangeError, 
 # from playingcardsplus.custom_error import TestError
 
 from collections import defaultdict
-from typing_extensions import Dict, Tuple, List, DefaultDict
-from pydantic import BaseModel, PositiveInt, NonNegativeInt, ConfigDict, Field, field_validator, model_validator, computed_field, ValidationError
+from typing_extensions import Dict, Tuple, List, DefaultDict, Annotated
+from pydantic import BaseModel, PositiveInt, NonNegativeInt, ConfigDict, Field, field_validator, model_validator, computed_field, ValidationError, BeforeValidator
 
 
 # TODO prob the most important thing to add is make sure the instruction set covers soem condition on how many cards to be distributed frokm non-unused as this is entirely game dependent
@@ -67,7 +67,7 @@ class Rules(BaseModel): # Requires a pretty sphisticated validation
 
 
     # Rules for how player actions should be interpretted by the Game & Dealer
-    instructions: PlayerDecision_InstructionSet
+    instructions: InstructionSet
     instruction_constraints: Dict | None #TODO: not exactly sure what this'd look like yet TBH
 
     @computed_field

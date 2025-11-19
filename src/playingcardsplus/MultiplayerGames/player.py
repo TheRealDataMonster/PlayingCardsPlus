@@ -1,7 +1,8 @@
+from playingcardsplus.MultiplayerGames.instructions import Instruction, InstructionSetImplementer
+from playingcardsplus.MultiplayerGames.data import GameState, CheatingState
 from playingcardsplus.card import Card, JokerCard
 
 from typing_extensions import Optional, DefaultDict, Dict, NamedTuple, List, Any
-from abc import ABC, abstractmethod
 from pydantic import BaseModel, Field
 
 
@@ -18,6 +19,7 @@ from pydantic import BaseModel, Field
 #  > thing is I need ot valdiate the formatting of the result here and see if it matches with trace inb the proof verification stage?
 # 2) hand update: player received new hands - need to valdiate against its current udnerstanding of the deck and corr-ref againt proof of deck update
 
+
 class ScoreAndHandValidator(BaseModel):
     """
     Use this like this
@@ -29,18 +31,15 @@ class ScoreAndHandValidator(BaseModel):
     pass
 
 
-class PlayerBehavior(BaseModel):
-    name:str = Field(frozen=True)
-    soul: Optional[Any] = None
-
-
-class Instruction(NamedTuple):
-    op: str
-
-
-class PlayerDecision_InstructionSet(NamedTuple):
-    operations: List[Instruction]
-    # (K,V) function = instruction op, [decision functions which is a function in player action]
+class PlayerBehavior(NamedTuple):
+    name: str
+    soul: Dict[str, Any] # TODO: think of the structure of this? - should prob include
+    #   NameError
+    #   model
+    #   etc...
+    #
+    def run_model(self, *arg):
+        return self.soul["model"](arg)
 
 
 #TODO: it remaisn a choice whether to input a soul of a player of specific game or simply to input soul and separate types of players per game as a difff object...
@@ -49,15 +48,20 @@ class Player:
     Player object where name is immutable. Behavior - defined by AI can be modified each hand
     """
 
-    def __init__(self, name: str, initial_hand: DefaultDict[Card | JokerCard, int], initial_score: int, starting_behvior: Dict[str, str | int | float]):
+    def __init__(self, name: str, initial_hand: DefaultDict[Card | JokerCard, int], initial_score: int, behvior: PlayerBehavior):
         self.__name = name
         self.__hand = initial_hand
         self.__score = initial_score #TODO: score needs to be received from the Game - which may require some validation given it'll need ot xfer
-        self.__behavior = starting_behvior
+        self.__behavior = behvior
 
     # Player behavior can be parametrized by location of the model, specific rules-based criteria per game, etc...
 
     # Accept a dealt card - must be called by a Dealer
+    @property
+    def name(self):
+        return self.__name
+
+
     @property
     def hand(self) -> DefaultDict[Card | JokerCard, int]:
         return self.__hand
@@ -67,7 +71,7 @@ class Player:
         return self.__score
 
     @property  # TODO: further access control? - only game devs and simulation runners need control
-    def behavior(self) -> Dict[str, str | int | float]:
+    def behavior(self) -> PlayerBehavior:
         return self.__behavior
 
     def _accept_card(self, card: Card | JokerCard):
@@ -85,14 +89,12 @@ class Player:
         # exact logic for triggering this should be controlled by game devs
         self.__behavior = new_behavior
 
-    # TODO: Need to think about data structure that it grabs - specifically for cheat_codes
-    # TODO: should this directly call AI agent or make a ping to the agent, which should be grabbing the data on its own and retrieve the decision?
-    # @abstractmethod
     def take_action(
         self,
-        crucial_game_state: Dict,
-        historical_state: List[Dict],
-        cheat_codes: Optional[str],
+        current_game_state: GameState, # need to look at - board, their own hand, card counts, etc..
+        historical_states: List[GameState],
+        cheating_states: Optional[List[CheatingState]], # If allowed to cheat then it can look at
+        instruction_implementer: InstructionSetImplementer #TODO: rather a wrapper function that uses it
     ) -> List[Instruction]:
         """
         Takes in crucial information about the game itself to make a judgment & past information to make msot judgments.
@@ -100,4 +102,16 @@ class Player:
 
         Returns a specific action that the Game/Dealer needs to look at and take action.
         """
-        return self.behavior.soul(crucial_game_state, historical_state, cheat_codes)
+
+        # this will involve some sort of a model making a decision and that decision space will be the space of instruction set
+        # 1) TODO: need a function to convert data into a model runnable format - whatever it might look like...
+        # 2) Run model
+        player_actions =  self.__behavior.soul.run_model(current_game_state, self.__hand, historical_states, cheating_states)
+
+        # 3) TODO: Actually apply those actions
+        for instruction in player_actions:
+            if hasattr(instruction_implementer, "{}_player".format(instruction.operation)) and callable(getattr(instruction_implementer, "{}_player".format(instruction.operation))):
+                method = getattr(instruction_implementer, "{}_player".format(instruction.operation))
+                method(self) # TODO: hopefully this works...
+
+        return player_actions

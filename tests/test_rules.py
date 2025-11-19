@@ -14,7 +14,7 @@ It could be done I think we can get away by constraining some x and y values and
 
 
 from playingcardsplus.MultiplayerGames.rules import Rules
-from playingcardsplus.MultiplayerGames.player import PlayerDecision_InstructionSet, Instruction
+from playingcardsplus.MultiplayerGames.instructions import InstructionSet, Instruction
 from playingcardsplus.MultiplayerGames.deck import Distributee
 from playingcardsplus.dealer import CardDistributionMethod
 from playingcardsplus.custom_error import RuleIllFormedError, PlayerRangeError, CardDistributionError
@@ -56,6 +56,13 @@ __wrong_distribution_ordering = [
     "player", "wut",  Distributee.BOARD, Distributee.TRASH_PILE
 ]
 
+@pytest.mark.skip("not a test but a helper to run tests")
+def foo():
+    return "foo!"
+
+@pytest.mark.skip("not a test but a helper to run tests")
+def bar():
+    return "foobar!"
 
 # Test cases:
 # 1) early hands size = 1
@@ -90,11 +97,8 @@ def __generate_rules(
         "trash_pile_distribution_hand_i": 1*trash_i_multiplier,
         "distribution_methods": distribution_method,
         "distribution_ordering": distribution_ordering,
-        "instructions":PlayerDecision_InstructionSet(
-            operations = [
-                Instruction(op="foo"),
-                Instruction(op="bar")
-            ]
+        "instructions":InstructionSet(
+            {Instruction(operation="foo"), Instruction(operation="bar")}
         ),
         "instruction_constraints":{}
     }

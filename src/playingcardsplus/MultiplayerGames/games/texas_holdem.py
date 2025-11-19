@@ -1,35 +1,42 @@
-from playingcardsplus.custom_error import GameUnassignedError
-from playingcardsplus.MultiplayerGames.player import PlayerDecision_InstructionSet, Player, Instruction
+from playingcardsplus.MultiplayerGames.player import Player
+from playingcardsplus.MultiplayerGames.instructions import Instruction, InstructionSet
 from playingcardsplus.MultiplayerGames.dealer import DealerBehavior, Dealer
-from playingcardsplus.MultiplayerGames.deck import MultiPlayerDeck
+from playingcardsplus.MultiplayerGames.deck import Distributee, MultiPlayerDeck
 from playingcardsplus.MultiplayerGames.rules import Rules
 from playingcardsplus.MultiplayerGames.game import Game
+from playingcardsplus.dealer import CardDistributionMethod
 
-from typing_extensions import Dict, Iterable, Optional, Tuple
+# from typing_extensions import Dict, Iterable, Optional, Tuple
 
-#TODO: in heold'em you distributethe cards at turn 0 to players first then at turn 1 you put 3 cards on the board, and then so on....
+__HoldemPlayerOperations = InstructionSet(
+    instructions={
+        Instruction(operation="bet"), # includes raising
+        Instruction(operation="fold"),
+        Instruction(operation="check"),
+    }
+)
+
+
 __HoldemRules = Rules(
     deck_size=52,
     player_range=(2,10),
-    cards_per_player_early_hands=2,
-    cards_per_player_hand_i=0,
-    board_distribution_early_hands=3,
+    cards_per_player_early_hands=[2, 0], # pre-flop and flop
+    cards_per_player_hand_i=0, # turn, river
+    board_distribution_early_hands=[0, 3],
     board_distribution_hand_i=1,
-    trash_pile_distribution_early_hands=1,
+    trash_pile_distribution_early_hands=[0, 1],
     trash_pile_distribution_hand_i=1,
-    distribution_methods=,
-    distribution_ordering=,
-    allow_board_to_players=,
-    allow_trash_pile_to_players=,
-    allow_players_to_board=,
-    allow_trash_pile_to_board=,
-    allow_players_to_trash_pile=,
-    allow_board_to_trash_pile=,
-    allow_players_to_unused=,
-    allow_board_to_unused=,
-    allow_trash_pile_to_unused=,
-    instructions=,
-    instruction_constraints=,
+    distribution_methods= {
+        Distributee.PLAYER: CardDistributionMethod.LUMP,
+        Distributee.TRASH_PILE: CardDistributionMethod.LUMP,
+        Distributee.BOARD: CardDistributionMethod.LUMP,
+        Distributee.UNUSED: CardDistributionMethod.LUMP,
+    },
+    distribution_ordering=[
+        Distributee.TRASH_PILE, Distributee.PLAYER, Distributee.BOARD, Distributee.UNUSED
+    ], # at most hands, you burn 1 card first then
+    instructions=__HoldemPlayerOperations,
+    instruction_constraints={}
 )
 
 
