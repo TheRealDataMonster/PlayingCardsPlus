@@ -2,7 +2,7 @@ from playingcardsplus.MultiplayerGames.instructions import Instruction, Instruct
 from playingcardsplus.MultiplayerGames.data import GameState, CheatingState
 from playingcardsplus.card import Card, JokerCard
 
-from typing_extensions import Optional, DefaultDict, Dict, NamedTuple, List, Any
+from typing_extensions import Optional, DefaultDict, Dict, NamedTuple, List, Any, Tuple
 from pydantic import BaseModel, Field
 
 
@@ -95,23 +95,17 @@ class Player:
         historical_states: List[GameState],
         cheating_states: Optional[List[CheatingState]], # If allowed to cheat then it can look at
         instruction_implementer: InstructionSetImplementer #TODO: rather a wrapper function that uses it
-    ) -> List[Instruction]:
+    ) -> List[Tuple[Instruction, Any]]:
         """
         Takes in crucial information about the game itself to make a judgment & past information to make msot judgments.
         It can take in information that woould be normally considered cheating if it knew (cheat_code) - ie. knowing placement of specific cards
 
-        Returns a specific action that the Game/Dealer needs to look at and take action.
+        Returns a list of tuples that is (instruction, auxiliary parameters to be inputted to function of each  )
         """
 
         # this will involve some sort of a model making a decision and that decision space will be the space of instruction set
         # 1) TODO: need a function to convert data into a model runnable format - whatever it might look like...
         # 2) Run model
-        player_actions =  self.__behavior.soul.run_model(current_game_state, self.__hand, historical_states, cheating_states)
-
-        # 3) TODO: Actually apply those actions
-        for instruction in player_actions:
-            if hasattr(instruction_implementer, "{}_player".format(instruction.operation)) and callable(getattr(instruction_implementer, "{}_player".format(instruction.operation))):
-                method = getattr(instruction_implementer, "{}_player".format(instruction.operation))
-                method(self) # TODO: hopefully this works...
-
-        return player_actions
+        return self.__behavior.soul.run_model(current_game_state, self.__hand, historical_states, cheating_states)
+        # TODO: the model should return which action to take and certai nvalue attached to it
+        #   -> could be magnitude, which player, which means theere will be 2 variables that are

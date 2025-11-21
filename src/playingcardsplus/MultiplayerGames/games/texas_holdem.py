@@ -1,5 +1,5 @@
 from playingcardsplus.MultiplayerGames.player import Player
-from playingcardsplus.MultiplayerGames.instructions import Instruction, InstructionSet
+from playingcardsplus.MultiplayerGames.instructions import Instruction, InstructionSet, InstructionSetImplementer
 from playingcardsplus.MultiplayerGames.dealer import DealerBehavior, Dealer
 from playingcardsplus.MultiplayerGames.deck import Distributee, MultiPlayerDeck
 from playingcardsplus.MultiplayerGames.rules import Rules
@@ -16,6 +16,7 @@ __HoldemPlayerOperations = InstructionSet(
     }
 )
 
+class HoldemInstructionSet(InstructionSetImplementer):
 
 __HoldemRules = Rules(
     deck_size=52,

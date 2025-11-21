@@ -124,14 +124,13 @@ class Game(BaseModel, ABC):
             players=self.roster, rules=self.rules, deck=self.deck, hand_index=hand_index
         )
 
-
     def take_player_actions(self, instruction_implementer):
         game_state_post_deal = GameState(
             player_count=len(self.roster),
             board=self.deck.board,
             unused_count=len(self.deck.unused),
             trash_pile_count=len(self.deck.trash_pile),
-            player_hand_count=len(self.deck.player_hands),
+            player_hand_count=sum(self.deck.player_hands.values()),
             deck_type=self.deck.type,
             joker_count=self.deck.joker_count
         )
@@ -143,11 +142,13 @@ class Game(BaseModel, ABC):
                 cheating_states=[], #TODO: create option for cheating here
                 instruction_implementer=instruction_implementer
             )
-            #TODO: this deals with dealer actions - test it !
-            for instruction in player_actions:
-                if hasattr(instruction_implementer, "{}_dealer".format(instruction.operation)) and callable(getattr(instruction_implementer, "{}_dealer".format(instruction.operation))):
-                    method = getattr(instruction_implementer, "{}_dealer".format(instruction.operation))
-                    method(self.dealer) # TODO: hopefully this works...
+            # Actually apply those actions accordingly to players and dealers
+            for (instruction, aux_input) in player_actions:
+                if hasattr(instruction_implementer, "{}".format(instruction.operation)) and callable(getattr(instruction_implementer, "{}".format(instruction.operation))):
+                    method = getattr(instruction_implementer, "{}".format(instruction.operation))
+
+                    method(player=player, dealer=self.dealer, deck=self.deck, aux=aux_input) # TODO: hopefully this works...
+
             # Make sure it's recorded appropriately
             player_actions_map[player.name] = Game.__one_hot_encode_iterable(
                 iterable = player_actions,
